@@ -1,54 +1,55 @@
 (ns linear)
 
-(defn universal [op vectors]
-  (apply mapv op vectors))
+(defn universal [obj op]
+  (apply mapv op obj))
 
 (defn v+ [& vectors]
-  (universal + vectors))
+  (universal vectors +))
 
 (defn v- [& vectors]
-  (universal - vectors))
+  (universal vectors -))
 
 (defn v* [& vectors]
-  (universal * vectors))
+  (universal vectors *))
 
 (defn vd [& vectors]
-  (universal / vectors))
+  (universal vectors /))
 
 (defn m+ [& matrices]
-  (universal v+ matrices))
+  (universal matrices v+))
 
 (defn m- [& matrices]
-  (universal v- matrices))
+  (universal matrices v-))
 
 (defn m* [& matrices]
-  (universal v* matrices))
+  (universal matrices v*))
 
 (defn md [& matrices]
-  (universal vd matrices))
+  (universal matrices vd))
 
 (defn dot [& vectors]
-  (if (empty? vectors) 0 (reduce + (apply mapv * vectors))))
+  (if (empty? vectors)
+    0
+    (apply + (universal vectors *))))
 
-(defn *s [op vector pr]
-  (mapv (fn [x] (op x pr)) vector))
+(defn *s [vector scalars op]
+  (let [pr (apply * scalars)]
+    (mapv #(op % pr) vector)))
 
 (defn v*s [vector & scalars]
-  (let [pr (reduce * scalars)]
-    (*s * vector pr)))
+    (*s vector scalars *))
 
 (defn m*s [matrix & scalars]
-  (let [pr (reduce * scalars)]
-    (*s v*s matrix pr)))
+    (*s matrix scalars v*s))
 
 (defn transpose [matrix]
   (apply mapv vector matrix))
 
 (defn m*v [matrix vector]
-  (mapv (fn [string] (reduce + (map * string vector))) matrix))
+  (mapv (fn [row] (apply + (map * row vector))) matrix))
 
 (defn m*m [& matrices]
   (reduce (fn [matrix1 matrix2]
             (let [matrix2_tr (transpose matrix2)]
-              (mapv (fn [string] (m*v matrix2_tr string)) matrix1)))
+              (mapv (partial m*v matrix2_tr) matrix1)))
           matrices))
